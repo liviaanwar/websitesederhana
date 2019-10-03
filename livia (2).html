@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>cek cek via</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css">
+</head>
+<body>
+
+    <input type="file" id="myFile">
+    <button type="button" id="btnDisplay">Display</button>
+    <table id="tbl" class="display" style="width:100%"></table>
+    <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.5.6/js/dataTables.buttons.min.js" type="text/javascript"></script>
+    <script src="https://cdn.datatables.net/buttons/1.5.6/js/buttons.html5.min.js" type="text/javascript"></script>
+    <script>
+// vvia SCRIPT untuk convert JSON to Datatable//
+        $('#btnDisplay').click(function () {
+            //get file object
+            var file = document.getElementById('myFile').files[0];
+            if (file) {
+                // create reader
+                var reader = new FileReader();
+                reader.readAsText(file);
+                reader.onload = function (e) {
+                    // browser completed reading file - display it
+                    var aItems = JSON.parse(e.target.result)
+                    LoadCurrentReport(aItems);
+                };
+            }
+        });
+
+        $('#btnSave').click(function(){
+        	     var oTable = $('#tbl').dataTable();
+        	     var rowcollection =  oTable.$("input[type=checkbox]:checked", {"page": "all"});
+        	     var rowcollection2 =  oTable.$("input[type=checkbox]:not(:checked)", {"page": "all"});
+        	     rowcollection.each(function(index,elem){
+        	         var checkbox_value = $(elem).val();
+        	         console.log("MUNTUP",index,elem,checkbox_value);
+        	         //Do something with 'checkbox_value'
+        	     });
+        	     rowcollection2.each(function(index,elem){
+        	         var checkbox_value = $(elem).val();
+        	         checkbox_value = 'No';
+        	         console.log("MUNTUP",index,elem,checkbox_value);
+        	         //Do something with 'checkbox_value'
+        	     });
+        });
+        // $("input[type=checkbox name=index1]").click(function(){
+        // 	$(this).attr('checked');
+        // 	console.log("MUNTUP");
+        // });
+         function LoadCurrentReport(oResults) {
+
+                //Load  datatable
+                var editor;
+$(document).ready(function() {
+      // initialize table
+    var t = $('#example').DataTable({
+            dom:'Bfrtip',
+        paging:   false,
+        bFilter: false, 
+        bInfo: false,
+        buttons: [
+                'csv'
+                
+            
+        ]
+    });
+    
+        // add row
+    $('#addRow').click(function () {
+          var data = [];
+          data.push($('#input1').val());
+          for(var i=1;i<5;i++){
+            if($('#folder'+i).is(':checked')){
+              data.push('yes');        
+            }else{
+              data.push('no');
+            }
+          }
+          //t.row.add( [1,2,3] ).draw();
+          //console.log("t.data()",t.data());
+          //var rowHtml = $("#newRow").find("tr")[0].outerHTML
+          //console.log(rowHtml);
+          t.row.add(data).draw();
+    });
+ 
+});
+// vvia SCRIPT untuk convert ke CSV //
+                var oTblReport = $("#tbl")
+                var columns = [];
+                Object.keys(oResults[0]).map((item) => {
+                    item = item.split(";");
+                    for(var ii in item){
+                        var a = {data : item[ii], title : item[ii]};
+                        columns.push(a);
+                    }
+                });
+                var dataAll = [];
+                var count= 1;
+                for(var i in oResults){
+                    var data = oResults[i];
+                    dataOlah = [];
+                    
+                    for(var ii in oResults[i]){
+                        var item = oResults[i][ii];
+                        item = item.split(";");
+                        var keynya = '';
+                        Object.keys(oResults[0]).map((item) => {
+                            keynya = item;
+                        });
+                        var datavalue = [];
+                        itemkey = keynya.split(";");
+                        for(var iii in itemkey){
+                            // var a = {data : item[ii], title : item[ii]};
+                            var valueOlah = item[iii];
+                            if (valueOlah == '') {
+                                valueOlah = '<input type="checkbox" name="idx'+count+'#'+itemkey[iii]+'" value="Yes" >';
+                            } 
+                            var obj = {
+                                  [itemkey[iii]]: valueOlah,
+                                }
+                            datavalue.push(obj);
+                        }
+                        count++;
+                        // var a = {data : item};
+                        dataOlah.push(datavalue)
+                    }
+                    dataArray = {}
+                    for (var i= 0; i < dataOlah[0].length; i++ ) {
+                        // dataArray
+                        dataArray = Object.assign(dataArray, dataOlah[0][i]);
+                    }
+                    // Array.prototype.concat(dataOlah[0]);
+                    dataAll.push(dataArray);
+                    // console.log(dataArray);
+                }
+                // console.log(dataAll)
+                console.log(columns,dataAll);
+                oTblReport.DataTable({
+                    "data": dataAll,
+                    "columns": columns,
+                    dom:'Bfrtip',
+                    buttons: [
+                            { 
+	                    	extend  : 'csv',
+            	            title   : 'CSV Export',
+                			text: 'Create CSV',
+                			action: function ( e, dt,button, config ) {
+                				console.log('dt ===>',e, dt,button, config);
+                				var keynya = [];
+                				var data = []
+                				keynya = Object.keys(dt.data()[0]);
+                				var checkbox_value = []
+                				var oTable = $('#tbl').dataTable();
+                				var rowcollection =  oTable.$("input[type=checkbox]:checked", {"page": "all"});
+                				var rowcollection2 =  oTable.$("input[type=checkbox]:not(:checked)", {"page": "all"});
+                				rowcollection.each(function(index,elem){
+                				    checkbox_value.push({value:$(elem).val(),tag:$(elem).attr('name')});
+                				    //Do something with 'checkbox_value'
+                				});
+                				rowcollection2.each(function(index,elem){
+                				    checkbox_value.push({value:'No',tag:$(elem).attr('name')});
+                				    //Do something with 'checkbox_value'
+                				});
+                				// console.log('dt ===>',keynya);
+                				console.log('=====>',keynya);
+                				console.log('=======>',checkbox_value);
+                				for(var i = 0; i< dt.data().length; i++){
+                					for(var k = 0; k <keynya.length; k++ ){
+                						for(var j in checkbox_value ){
+                							var tmpKey = checkbox_value[j].tag.split('#');
+                							// console.log('=====>',tmpKey[1],keynya[k])
+                							if(tmpKey[1] == keynya[k] && tmpKey[0] == ('idx'+(i+1)) ){
+                								console.log('MASUK >',dt.data()[i][keynya[k]],'idx'+i,tmpKey)
+                								dt.data()[i][keynya[k]] = checkbox_value[j].value;
+                							}
+
+                						}
+                						
+                					}
+
+                				}
+
+                				console.log('checkbox_value',dt.data());
+                				// Do custom processing
+                				// ...
+                				// Call the default csvHtml5 action method to create the CSV file
+                				$.fn.dataTable.ext.buttons.csvHtml5.action.call(this, e, dt, button, config);
+                			}
+                		}
+                        
+                    ]
+                });
+            }
+    </script>
+</body>
+</html>
